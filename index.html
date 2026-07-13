@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>NSCP 2015 Concrete Beam Calculator</title>
+
+<style>
+body{
+    font-family: Arial, sans-serif;
+    max-width:900px;
+    margin:20px auto;
+    padding:20px;
+    background:#f4f4f4;
+}
+.container{
+    background:white;
+    padding:20px;
+    border-radius:8px;
+    box-shadow:0 0 10px rgba(0,0,0,0.1);
+}
+h2{
+    color:#003366;
+}
+input{
+    width:120px;
+    padding:5px;
+}
+table{
+    width:100%;
+    border-collapse:collapse;
+}
+td{
+    padding:8px;
+}
+.result{
+    background:#eef7ff;
+    padding:15px;
+    margin-top:20px;
+    border-radius:5px;
+}
+button{
+    padding:10px 15px;
+    background:#0078D7;
+    color:white;
+    border:none;
+    border-radius:4px;
+    cursor:pointer;
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+<h2>NSCP 2015 Beam Flexural Design Calculator</h2>
+
+<table>
+<tr>
+<td>Beam Width b (mm)</td>
+<td><input type="number" id="b" value="300"></td>
+</tr>
+
+<tr>
+<td>Total Depth h (mm)</td>
+<td><input type="number" id="h" value="600"></td>
+</tr>
+
+<tr>
+<td>Concrete Cover (mm)</td>
+<td><input type="number" id="cover" value="40"></td>
+</tr>
+
+<tr>
+<td>Stirrup Dia (mm)</td>
+<td><input type="number" id="stirrup" value="10"></td>
+</tr>
+
+<tr>
+<td>Bar Dia (mm)</td>
+<td><input type="number" id="bar" value="20"></td>
+</tr>
+
+<tr>
+<td>f'c (MPa)</td>
+<td><input type="number" id="fc" value="28"></td>
+</tr>
+
+<tr>
+<td>fy (MPa)</td>
+<td><input type="number" id="fy" value="415"></td>
+</tr>
+
+<tr>
+<td>Factored Moment Mu (kN-m)</td>
+<td><input type="number" id="Mu" value="150"></td>
+</tr>
+</table>
+
+<button onclick="calculate()">Calculate</button>
+
+<div class="result">
+<h3>Results</h3>
+
+<p>Effective Depth (d): <span id="d"></span> mm</p>
+<p>Required As: <span id="Asreq"></span> mm²</p>
+<p>Area per Bar: <span id="Abar"></span> mm²</p>
+<p>Required Number of Bars: <span id="bars"></span></p>
+<p>Provided As: <span id="Asprov"></span> mm²</p>
+
+</div>
+
+</div>
+
+<script>
+
+function calculate(){
+
+let b = parseFloat(document.getElementById("b").value);
+let h = parseFloat(document.getElementById("h").value);
+let cover = parseFloat(document.getElementById("cover").value);
+let stirrup = parseFloat(document.getElementById("stirrup").value);
+let barDia = parseFloat(document.getElementById("bar").value);
+let fc = parseFloat(document.getElementById("fc").value);
+let fy = parseFloat(document.getElementById("fy").value);
+let Mu = parseFloat(document.getElementById("Mu").value);
+
+let phi = 0.90;
+
+let d = h - cover - stirrup - barDia/2;
+
+let Mn = Mu / phi;
+let MnNmm = Mn * 1000000;
+
+let A =
+0.85 * fc * b * d;
+
+let As =
+(A - Math.sqrt(
+Math.pow(A,2)
+-
+(2 * 0.85 * fc * b * MnNmm / fy)
+))
+/
+fy;
+
+let Abar =
+Math.PI * Math.pow(barDia,2) / 4;
+
+let bars =
+Math.ceil(As / Abar);
+
+let Asprov =
+bars * Abar;
+
+document.getElementById("d").innerHTML =
+d.toFixed(1);
+
+document.getElementById("Asreq").innerHTML =
+As.toFixed(0);
+
+document.getElementById("Abar").innerHTML =
+Abar.toFixed(0);
+
+document.getElementById("bars").innerHTML =
+bars;
+
+document.getElementById("Asprov").innerHTML =
+Asprov.toFixed(0);
+
+}
+
+</script>
+
+</body>
+</html>
+<tr>
+<td>Factored Shear Vu (kN)</td>
+<td><input type="number" id="Vu" value="120"></td>
+</tr>
+
+<tr>
+<td>Stirrup Legs</td>
+<td><input type="number" id="legs" value="2"></td>
+</tr>
+
+<tr>
+<td>Stirrup Bar Diameter (mm)</td>
+<td><input type="number" id="stirrupBar" value="10"></td>
+</tr>
+<p>Concrete Shear Capacity Vc: <span id="Vc"></span> kN</p>
+<p>Phi Vc: <span id="phiVc"></span> kN</p>
+<p>Required Vs: <span id="Vs"></span> kN</p>
+<p>Required Stirrup Spacing: <span id="spacing"></span> mm</p>
+<p>Provide: <span id="recommendation"></span></p>
+let Vu = parseFloat(document.getElementById("Vu").value);
+let legs = parseFloat(document.getElementById("legs").value);
+let stirrupBar = parseFloat(document.getElementById("stirrupBar").value);
+
+let phiShear = 0.75;
+
+/*
+Concrete shear strength
+Vc = 0.17√fc' bw d
+MPa, mm units
+Result in N
+*/
+
+let Vc =
+0.17 *
+Math.sqrt(fc) *
+b *
+d;
+
+let Vc_kN = Vc / 1000;
+
+let phiVc =
+phiShear *
+Vc_kN;
+
+/*
+Required shear reinforcement
+Vs = Vu/phi - Vc
+*/
+
+let VsReq =
+(Math.max(0,(Vu/phiShear) - Vc_kN));
+
+/*
+Area of stirrup reinforcement
+*/
+
+let Av =
+legs *
+(Math.PI * Math.pow(stirrupBar,2) / 4);
+
+/*
+Vs = Av fy d / s
+
+s = Av fy d / Vs
+*/
+
+let spacing;
+
+if(VsReq <= 0){
+
+    spacing = Math.min(d/2,600);
+
+}else{
+
+    spacing =
+    (Av * fy * d) /
+    (VsReq * 1000);
+
+}
+
+/*
+Maximum spacing limits
+*/
+
+let sMax =
+Math.min(d/2,600);
+
+spacing =
+Math.min(spacing,sMax);
+
+let recommendation =
+Math.floor(spacing/25)*25;
+
+document.getElementById("Vc").innerHTML =
+Vc_kN.toFixed(1);
+
+document.getElementById("phiVc").innerHTML =
+phiVc.toFixed(1);
+
+document.getElementById("Vs").innerHTML =
+VsReq.toFixed(1);
+
+document.getElementById("spacing").innerHTML =
+spacing.toFixed(0);
+
+document.getElementById("recommendation").innerHTML =
+legs + "-Ø" +
+stirrupBar +
+" @ " +
+recommendation +
+" mm";
